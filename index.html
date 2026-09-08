@@ -21,6 +21,9 @@
       --accent-blue: #1d8cf8;
       --accent-teal: #00f2c3;
       --accent-pink: #e14eca;
+
+      --row-hover: #2e3046;
+      --row-child: #202133;
     }
 
     body {
@@ -78,20 +81,34 @@
     
     .chart-container { position: relative; height: 400px; width: 100%; }
 
+    /* HIERARCHICAL TABLE STYLES */
     table { width: 100%; border-collapse: collapse; text-align: left; }
     th { background-color: #1a1a2e; color: var(--text-muted); border-bottom: 2px solid var(--border-dark); padding: 12px; font-weight: bold; }
-    td { padding: 12px; border-bottom: 1px solid var(--border-dark); font-size: 15px; }
-    tr:hover td { background-color: var(--row-hover); }
+    
+    .parent-row { background-color: var(--panel-bg); cursor: pointer; transition: background 0.2s; border-bottom: 1px solid var(--border-dark); }
+    .parent-row:hover { background-color: var(--row-hover); }
+    .parent-row td { padding: 14px 12px; font-weight: bold; font-size: 15px; }
+    
+    .child-row { background-color: var(--row-child); display: none; border-bottom: 1px dashed var(--border-dark); }
+    .child-row.show { display: table-row; }
+    .child-row td { padding: 10px 12px; font-size: 13px; color: #d4d4d8; }
+    
+    .expand-icon { width: 20px; display: inline-block; text-align: center; color: var(--text-muted); transition: transform 0.2s; }
+    .parent-row.expanded .expand-icon { transform: rotate(90deg); color: var(--accent-teal); }
+    
     .text-right { text-align: right; }
+    .text-center { text-align: center; }
     
     /* PRINT STYLES */
     @media print {
       body { background-color: #fff; color: #000; }
-      .no-print, .filter-panel { display: none !important; }
+      .no-print, .filter-panel, .expand-icon { display: none !important; }
       .card { border: none; box-shadow: none; padding: 0; }
+      .child-row { display: table-row !important; } /* ปริ้นท์ให้กางออกทั้งหมด */
       table { margin-top: 20px; }
       th { background-color: #f2f2f2 !important; color: #000; border: 1px solid #000; }
       td { border: 1px solid #999; color: #000 !important; }
+      .parent-row td { background-color: #e6e6e6 !important; border-top: 2px solid #000; }
       .app-title, .card-title { color: #000; }
     }
   </style>
@@ -103,7 +120,7 @@
   <div class="app-header">
     <div>
       <h1 class="app-title"><i class="fa-solid fa-chart-column"></i> PRODUCTION PERFORMANCE REPORT</h1>
-      <div class="app-subtitle">รายงานสรุปยอดการผลิตแยกตามขั้นตอนและรายเดือน</div>
+      <div class="app-subtitle">รายงานสรุปยอดการผลิตแยกตามขั้นตอน รายวัน และรายเดือน</div>
     </div>
     <div class="no-print" style="display:flex; gap:10px;">
       <a href="index.html" class="btn btn-home" title="กลับหน้ากระดานค้างผลิต"><i class="fa-solid fa-layer-group"></i> WIP BOARD</a>
@@ -133,15 +150,15 @@
       </div>
     </div>
 
-    <!-- ส่วนแสดงตารางสรุป -->
+    <!-- ส่วนแสดงตารางสรุปแบบมีรายละเอียดย่อย (Expandable) -->
     <div class="card">
-      <h2 class="card-title"><i class="fa-solid fa-table"></i> ตารางสรุปยอดผลิตรวม (ตามช่วงเวลาที่กรอง)</h2>
+      <h2 class="card-title"><i class="fa-solid fa-table"></i> ตารางยอดผลิต (คลิกเพื่อดูรายละเอียดรายวัน)</h2>
       <table id="summaryTable">
         <thead>
           <tr>
-            <th>ลำดับ</th>
-            <th>ขั้นตอนการทำงาน</th>
-            <th class="text-right">ยอดรวมผลิตได้ (ชิ้น)</th>
+            <th width="10%" class="text-center">ลำดับ</th>
+            <th width="50%">ขั้นตอนการทำงาน / วันที่ผลิต</th>
+            <th width="40%" class="text-right">ยอดรวมผลิตได้ (ชิ้น)</th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -149,7 +166,7 @@
         </tbody>
         <tfoot id="tableFoot" style="font-weight:bold; color:var(--accent-teal); background-color:#1a1a2e; display:none;">
           <tr>
-            <td colspan="2" class="text-right">รวมยอดผลิตทั้งหมด:</td>
+            <td colspan="2" class="text-right">รวมยอดผลิตทั้งหมด (ในช่วงเวลาที่เลือก):</td>
             <td id="grandTotal" class="text-right">0</td>
           </tr>
         </tfoot>
@@ -160,7 +177,6 @@
 </div>
 
 <script>
-  // การตั้งค่าฐานข้อมูล
   const SUPABASE_URL = "https://siiiifesdjuunwmwozfb.supabase.co/rest/v1";
   const SUPABASE_KEY = "sb_publishable_ohToE8Z_Fzo87uBtzdPDIg_cqHCi3HT";
   const headers = {
@@ -169,42 +185,34 @@
     "Content-Type": "application/json"
   };
 
-  let myChart = null; // ตัวแปรเก็บ Object ของกราฟ
+  let myChart = null; 
   
-  // ลำดับขั้นตอนตามสายพาน (เรียงในตาราง)
   const customStepOrder = ["ตัดเหรียญมือ", "ตัดเหรียญออโต", "ตัดมุม", "รีดใบ", "ตัดใบ", "เจาะซี่", "ตีตรา", "ตีลาย", "ขึ้นรูป"];
-  // สีประจำขั้นตอน (สุ่มไว้ให้แตกต่างกันในกราฟ)
   const stepColors = {
     "ตัดเหรียญมือ": "#ff8a76", "ตัดเหรียญออโต": "#ffb236", "ตัดมุม": "#ffd600",
     "รีดใบ": "#1d8cf8", "ตัดใบ": "#00f2c3", "เจาะซี่": "#e14eca",
     "ตีตรา": "#ba54f5", "ตีลาย": "#00d6b4", "ขึ้นรูป": "#3358f4"
   };
 
-  // ตั้งค่าวันที่ Default (ต้นเดือน - วันนี้)
   window.onload = function() {
     let today = new Date();
     let firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
     
     document.getElementById('dateTo').value = today.toISOString().split('T')[0];
-    // ปรับ Timezone ง่ายๆ ป้องกันวันที่เลื่อน
     let tzOffset = (new Date()).getTimezoneOffset() * 60000;
     let localFirstDay = (new Date(firstDay - tzOffset)).toISOString().split('T')[0];
     document.getElementById('dateFrom').value = localFirstDay;
     
-    // โหลดข้อมูลอัตโนมัติเมื่อเข้าหน้าเว็บ
     fetchAndRenderReport();
   };
 
-  // ฟังก์ชันหลัก: ดึงข้อมูลและสร้างรายงาน
   async function fetchAndRenderReport() {
     document.getElementById('loadingMsg').style.display = 'inline-block';
     const dateFrom = document.getElementById('dateFrom').value;
     const dateTo = document.getElementById('dateTo').value;
 
     try {
-      // 1. ดึงข้อมูลดิบจากฐานข้อมูล
       const [prodRes, targetsRes, stepsRes] = await Promise.all([
-        // ดึงเฉพาะข้อมูลผลิตที่อยู่ในช่วงวันที่ที่เลือก
         fetch(`${SUPABASE_URL}/daily_production?select=id_target,produced_amount,record_date&record_date=gte.${dateFrom}&record_date=lte.${dateTo}`, { headers }), 
         fetch(`${SUPABASE_URL}/targets?select=id_target,id_step`, { headers }),
         fetch(`${SUPABASE_URL}/production_steps?select=id_step,step_name`, { headers })
@@ -216,16 +224,14 @@
       const targets = await targetsRes.json();
       const steps = await stepsRes.json();
 
-      // 2. จับคู่ข้อมูล (Mapping) id_target -> id_step -> step_name
       let targetToStepName = {};
       targets.forEach(t => {
         let step = steps.find(s => String(s.id_step) === String(t.id_step));
         targetToStepName[t.id_target] = step ? step.step_name : "อื่นๆ";
       });
 
-      // 3. จัดกลุ่มข้อมูล (Grouping)
-      let summaryByStep = {}; // สำหรับตาราง
-      let monthlyDataByStep = {}; // สำหรับกราฟ
+      let summaryByStep = {}; // จัดเก็บข้อมูลแบบใหม่ให้มีรายวันด้วย { "ตัดมุม": { total: 100, daily: { "2026-09-01": 100 } } }
+      let monthlyDataByStep = {}; 
       let uniqueMonths = new Set();
 
       productions.forEach(prod => {
@@ -234,23 +240,30 @@
         
         if (amount === 0) return;
 
-        // ดึง ปี-เดือน (เช่น "2026-08")
         let dateObj = new Date(prod.record_date);
-        let monthStr = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
         
+        // --- 1. ข้อมูลสำหรับกราฟ (รายเดือน) ---
+        let monthStr = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
         uniqueMonths.add(monthStr);
 
-        // รวมยอดสำหรับตาราง
-        if (!summaryByStep[stepName]) summaryByStep[stepName] = 0;
-        summaryByStep[stepName] += amount;
-
-        // รวมยอดสำหรับกราฟ (แยกตามเดือน)
         if (!monthlyDataByStep[stepName]) monthlyDataByStep[stepName] = {};
         if (!monthlyDataByStep[stepName][monthStr]) monthlyDataByStep[stepName][monthStr] = 0;
         monthlyDataByStep[stepName][monthStr] += amount;
+
+        // --- 2. ข้อมูลสำหรับตาราง (รายวันซ้อนในขั้นตอน) ---
+        let dayStr = prod.record_date; // วันที่ดิบเช่น 2026-09-09
+        if (!summaryByStep[stepName]) {
+          summaryByStep[stepName] = { total: 0, daily: {} };
+        }
+        
+        summaryByStep[stepName].total += amount;
+        
+        if (!summaryByStep[stepName].daily[dayStr]) {
+          summaryByStep[stepName].daily[dayStr] = 0;
+        }
+        summaryByStep[stepName].daily[dayStr] += amount;
       });
 
-      // 4. วาดตารางและกราฟ
       renderTable(summaryByStep);
       renderChart(monthlyDataByStep, Array.from(uniqueMonths).sort());
 
@@ -261,7 +274,14 @@
     }
   }
 
-  // ฟังก์ชันวาดตาราง
+  // ฟังก์ชันกาง/หุบ แถวรายละเอียดรายวัน
+  function toggleChildRows(index) {
+    const parentRow = document.getElementById(`parent_${index}`);
+    const childRows = document.querySelectorAll(`.child-of-${index}`);
+    parentRow.classList.toggle('expanded');
+    childRows.forEach(row => { row.classList.toggle('show'); });
+  }
+
   function renderTable(summaryData) {
     const tbody = document.getElementById('tableBody');
     const tfoot = document.getElementById('tableFoot');
@@ -269,12 +289,10 @@
     
     let grandTotal = 0;
     
-    // แปลง Object เป็น Array เพื่อเรียงลำดับ
     let rows = Object.keys(summaryData).map(stepName => {
-      return { step: stepName, total: summaryData[stepName] };
+      return { step: stepName, total: summaryData[stepName].total, daily: summaryData[stepName].daily };
     });
 
-    // เรียงตามสายพาน
     rows.sort((a, b) => {
       let iA = customStepOrder.indexOf(a.step.trim());
       let iB = customStepOrder.indexOf(b.step.trim());
@@ -290,44 +308,61 @@
       return;
     }
 
+    let html = '';
     rows.forEach((row, index) => {
       grandTotal += row.total;
-      tbody.innerHTML += `
-        <tr>
-          <td>${index + 1}</td>
-          <td style="color:var(--accent-blue); font-weight:bold;">${row.step}</td>
-          <td class="text-right" style="color:#fff;">${row.total.toLocaleString()}</td>
+      
+      // แถวหลัก (รวมยอด)
+      html += `
+        <tr class="parent-row" onclick="toggleChildRows(${index})" id="parent_${index}">
+          <td class="text-center">${index + 1}</td>
+          <td>
+            <span class="expand-icon"><i class="fa-solid fa-chevron-right"></i></span>
+            <span style="color:var(--accent-blue); font-weight:bold;">${row.step}</span>
+          </td>
+          <td class="text-right" style="color:#fff; font-size:16px;">${row.total.toLocaleString()}</td>
         </tr>
       `;
+
+      // แถวย่อย (รายวัน)
+      let dailyKeys = Object.keys(row.daily).sort(); // เรียงวันที่
+      dailyKeys.forEach(dateStr => {
+        let d = new Date(dateStr);
+        // แปลง format เป็น วว/ดด/ปปปป
+        let formattedDate = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+        
+        html += `
+          <tr class="child-row child-of-${index}">
+            <td></td>
+            <td style="padding-left: 35px; color: var(--text-muted);">
+              <i class="fa-regular fa-calendar-days" style="margin-right: 5px;"></i> ประจำวันที่: <span style="color:#e4e4e4">${formattedDate}</span>
+            </td>
+            <td class="text-right" style="color: var(--accent-teal);">${row.daily[dateStr].toLocaleString()}</td>
+          </tr>
+        `;
+      });
     });
 
+    tbody.innerHTML = html;
     document.getElementById('grandTotal').innerText = grandTotal.toLocaleString();
     tfoot.style.display = 'table-row-group';
   }
 
-  // ฟังก์ชันวาดกราฟแท่ง (Chart.js)
   function renderChart(monthlyData, monthsArray) {
     const ctx = document.getElementById('productionChart').getContext('2d');
     
-    // ทำลายกราฟเก่าทิ้งก่อนวาดใหม่ ป้องกันบัคภาพซ้อน
     if (myChart) { myChart.destroy(); }
+    if (monthsArray.length === 0) { return; } 
 
-    if (monthsArray.length === 0) { return; } // ไม่มีข้อมูล ไม่ต้องวาด
-
-    // แปลงรูปแบบ "2026-08" ให้เป็นชื่อเดือนสวยๆ เช่น "ส.ค. 2026"
     const monthNamesThai = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
     const labels = monthsArray.map(mStr => {
       let [year, month] = mStr.split('-');
       return `${monthNamesThai[parseInt(month)-1]} ${year}`;
     });
 
-    // เตรียม Dataset ให้กราฟแท่ง (1 ขั้นตอน = 1 สี)
     let datasets = [];
     Object.keys(monthlyData).forEach((stepName, index) => {
-      // ดึงข้อมูลเรียงตามเดือนที่แกน X
       let dataPoints = monthsArray.map(mStr => monthlyData[stepName][mStr] || 0);
-      
-      // เลือกสี
       let color = stepColors[stepName.trim()] || `hsl(${(index * 50) % 360}, 70%, 60%)`;
 
       datasets.push({
@@ -340,38 +375,22 @@
       });
     });
 
-    // วาดกราฟ
     myChart = new Chart(ctx, {
       type: 'bar',
       data: {
-        labels: labels, // แกน X (เดือน)
-        datasets: datasets // ข้อมูลแท่ง
+        labels: labels, 
+        datasets: datasets 
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: 'top',
-            labels: { color: '#e4e4e4', font: { family: 'Sarabun' } }
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            titleFont: { family: 'Sarabun' },
-            bodyFont: { family: 'Sarabun' }
-          }
+          legend: { position: 'top', labels: { color: '#e4e4e4', font: { family: 'Sarabun' } } },
+          tooltip: { mode: 'index', intersect: false, titleFont: { family: 'Sarabun' }, bodyFont: { family: 'Sarabun' } }
         },
         scales: {
-          x: {
-            ticks: { color: '#9a9a9a', font: { family: 'Sarabun' } },
-            grid: { color: '#3b3b54' }
-          },
-          y: {
-            ticks: { color: '#9a9a9a', font: { family: 'Sarabun' } },
-            grid: { color: '#3b3b54' },
-            beginAtZero: true
-          }
+          x: { ticks: { color: '#9a9a9a', font: { family: 'Sarabun' } }, grid: { color: '#3b3b54' } },
+          y: { ticks: { color: '#9a9a9a', font: { family: 'Sarabun' } }, grid: { color: '#3b3b54' }, beginAtZero: true }
         }
       }
     });
