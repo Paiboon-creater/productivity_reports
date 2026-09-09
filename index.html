@@ -3,326 +3,143 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>JAGUAR // PRODUCTION REPORT</title>
+  <title>คู่มือการใช้งาน - JAGUAR PRODUCTIONS</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
   <style>
     /* THEME: MIDNIGHT PURPLE & BLUE */
     :root {
-      --bg-main: #0B0E14;        /* พื้นหลังหลัก (ดำอมน้ำเงินเข้ม) */
-      --panel-bg: #151A26;       /* พื้นหลังกล่อง (น้ำเงินเข้ม) */
-      --border-dark: #2A3245;    /* เส้นขอบ */
-      --text-main: #F8FAFC;      /* สีอักษรหลัก */
-      --text-muted: #64748B;     /* สีเทา (ช่องที่ไม่มีข้อมูล) */
-      
-      --accent-purple: #8B5CF6;  /* ม่วง */
-      --accent-blue: #3B82F6;    /* น้ำเงิน */
-      --accent-cyan: #06B6D4;    /* ฟ้า/ไซอัน (ไฮไลท์ตัวเลข) */
-      --accent-pink: #EC4899;    /* ชมพู (แจ้งเตือน) */
-
-      --row-hover: #1E2536;      /* สีเวลาเอาเมาส์ชี้แถว */
+      --bg-main: #0B0E14;        
+      --panel-bg: #151A26;       
+      --border-dark: #2A3245;    
+      --text-main: #F8FAFC;      
+      --text-muted: #94A3B8;     
+      --accent-purple: #8B5CF6;  
+      --accent-blue: #3B82F6;    
     }
 
     body {
-      font-family: 'Courier New', Courier, monospace, 'Sarabun', sans-serif;
-      background-color: var(--bg-main); color: var(--text-main);
-      margin: 0; padding: 20px; font-size: 14px;
+      font-family: 'Sarabun', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.6;
+      margin: 0; padding: 20px;
+    }
+    
+    .manual-container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: var(--panel-bg);
+      padding: 40px;
+      border-radius: 10px;
+      border: 1px solid var(--border-dark);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
     }
 
-    .container { max-width: 1400px; margin: 0 auto; }
-
-    .app-header {
-      display: flex; justify-content: space-between; align-items: flex-end;
-      border-bottom: 2px solid var(--border-dark); padding-bottom: 15px; margin-bottom: 20px;
+    .header-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      border-bottom: 2px solid var(--border-dark);
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+      gap: 15px;
     }
-    .app-title { font-size: 24px; font-weight: bold; color: var(--accent-purple); margin: 0; letter-spacing: 1px; }
-    .app-subtitle { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
+
+    h1 { margin: 0; color: var(--accent-blue); font-size: 26px;}
+    h2 { color: var(--accent-purple); border-bottom: 1px dashed var(--border-dark); padding-bottom: 5px; margin-top: 35px;}
+    p, li { color: #CBD5E1; font-size: 15px; }
+    
+    .action-group { display: flex; gap: 10px; }
 
     .btn {
       background: transparent; border: 1px solid; 
-      padding: 8px 15px; border-radius: 6px; font-size: 14px;
-      font-family: inherit; font-weight: bold; cursor: pointer; transition: 0.2s;
+      padding: 8px 16px; border-radius: 6px;
+      font-size: 14px; font-family: inherit; font-weight: bold; 
+      cursor: pointer; transition: 0.2s;
       display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
     }
+    
     .btn-home { color: var(--accent-blue); border-color: var(--accent-blue); }
     .btn-home:hover { background: var(--accent-blue); color: #fff; box-shadow: 0 0 10px rgba(59, 130, 246, 0.4); }
-    .btn-submit { color: var(--accent-purple); border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.1); }
-    .btn-submit:hover { background: var(--accent-purple); color: #fff; box-shadow: 0 0 10px rgba(139, 92, 246, 0.4); }
+    
     .btn-print { color: #f8fafc; border-color: #f8fafc; }
     .btn-print:hover { background: #f8fafc; color: #000; }
-
-    /* FILTER SECTION */
-    .filter-panel {
-      background: var(--panel-bg); border: 1px solid var(--border-dark);
-      padding: 20px; border-radius: 8px; margin-bottom: 20px;
-      display: flex; flex-wrap: wrap; gap: 20px; align-items: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .filter-group { display: flex; align-items: center; gap: 10px; }
-    .filter-group label { font-weight: bold; color: var(--accent-blue); }
-    .filter-group input[type="date"] {
-      background: #0B0E14; color: #fff; border: 1px solid var(--border-dark);
-      padding: 8px 12px; border-radius: 4px; font-family: inherit; font-size: 14px;
-    }
-    .filter-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1); cursor: pointer; }
-
-    .card { background: var(--panel-bg); border: 1px solid var(--border-dark); padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-    .card-title { color: var(--accent-cyan); margin-top: 0; margin-bottom: 20px; font-size: 18px; border-bottom: 1px dashed var(--border-dark); padding-bottom: 10px;}
     
-    /* PIVOT TABLE STYLES */
-    .table-wrapper {
-      overflow-x: auto; 
-      width: 100%;
-      border-radius: 6px;
-      border: 1px solid var(--border-dark);
+    ul, ol { padding-left: 20px; }
+    li { margin-bottom: 12px; }
+
+    .note-box {
+      background-color: rgba(59, 130, 246, 0.1); 
+      border-left: 4px solid var(--accent-blue);
+      padding: 15px; border-radius: 4px; margin: 20px 0;
+      color: #F8FAFC;
     }
-    table { width: 100%; border-collapse: collapse; text-align: left; }
-    th { background-color: #0f131c; color: #E2E8F0; border-bottom: 2px solid var(--border-dark); padding: 12px; font-weight: bold; white-space: nowrap; }
-    td { padding: 12px; border-bottom: 1px solid var(--border-dark); font-size: 14px; white-space: nowrap; }
-    
-    /* Hover Effects */
-    tr { background-color: var(--panel-bg); transition: background-color 0.2s; }
-    tr:hover { background-color: var(--row-hover); }
-    tr:hover td { background-color: transparent; }
 
-    /* STICKY COLUMNS */
-    .sticky-col-1 { position: sticky; left: 0; z-index: 2; background-color: var(--panel-bg); }
-    .sticky-col-2 { position: sticky; left: 45px; z-index: 2; background-color: var(--panel-bg); border-right: 2px solid var(--border-dark); }
-    th.sticky-col-1, th.sticky-col-2 { background-color: #0f131c; z-index: 3; }
-    tr:hover .sticky-col-1, tr:hover .sticky-col-2 { background-color: var(--row-hover); }
-
-    .text-right { text-align: right; }
-    .text-center { text-align: center; }
-    
-    /* PRINT STYLES */
+    /* Print Styles: ทำให้พื้นเป็นสีขาว ตัวหนังสือสีดำ ประหยัดหมึก */
     @media print {
-      body { background-color: #fff; color: #000; }
-      .no-print, .filter-panel { display: none !important; }
-      .card { border: none; box-shadow: none; padding: 0; }
-      .table-wrapper { overflow: visible; border: none; }
-      table { margin-top: 20px; width: 100%; }
-      th { background-color: #f2f2f2 !important; color: #000; border: 1px solid #000; font-size: 11pt; }
-      td { border: 1px solid #999; color: #000 !important; font-size: 10pt; }
-      .sticky-col-1, .sticky-col-2 { position: static; background-color: transparent !important; border-right: 1px solid #999; }
-      tr, tr:hover { background-color: transparent !important; }
-      .app-title, .card-title { color: #000; }
+      body { background-color: #fff; color: #000; padding: 0; }
+      .manual-container { box-shadow: none; border: none; padding: 0; background: #fff;}
+      .no-print { display: none !important; }
+      h1, h2 { color: #000; border-color: #000; }
+      p, li { color: #333; }
+      .note-box { background-color: #f8f9fa; border-color: #666; color: #000; }
     }
   </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="app-header">
+<div class="manual-container">
+  
+  <div class="header-actions">
     <div>
-      <h1 class="app-title"><i class="fa-solid fa-chart-column"></i> PRODUCTION PERFORMANCE REPORT</h1>
-      <div class="app-subtitle">รายงานสรุปยอดการผลิตแยกตามขั้นตอน รายวัน (ตารางแบบกางวันที่)</div>
+      <h1><i class="fa-solid fa-book-open"></i> คู่มือการใช้งานระบบ JAGUAR PRODUCTIONS</h1>
+      <div style="color: var(--text-muted); margin-top: 5px;">Data Information Center - เวอร์ชัน 1.0</div>
     </div>
-    <div class="no-print" style="display:flex; gap:10px;">
-      <a href="index.html" class="btn btn-home" title="กลับหน้ากระดานค้างผลิต"><i class="fa-solid fa-layer-group"></i> WIP BOARD</a>
-      <button class="btn btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> PRINT</button>
+    <div class="action-group no-print">
+      <!-- ปุ่ม Home กลับไปหน้าหลักตามลิงก์ที่ขอ -->
+      <a href="https://paiboon-creater.github.io/Data_Information_Jaguar_productions/" class="btn btn-home"><i class="fa-solid fa-house"></i> กลับหน้าหลัก (HOME)</a>
+      <!-- ปุ่ม Print -->
+      <button class="btn btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> พิมพ์คู่มือ</button>
     </div>
   </div>
 
-  <div class="filter-panel no-print">
-    <div class="filter-group">
-      <label><i class="fa-regular fa-calendar"></i> ตั้งแต่วันที่:</label>
-      <input type="date" id="dateFrom">
-    </div>
-    <div class="filter-group">
-      <label><i class="fa-regular fa-calendar"></i> ถึงวันที่:</label>
-      <input type="date" id="dateTo">
-    </div>
-    <button class="btn btn-submit" onclick="fetchAndRenderReport()"><i class="fa-solid fa-magnifying-glass"></i> ประมวลผลรายงาน</button>
-    <span id="loadingMsg" style="color:var(--accent-cyan); display:none; margin-left: 10px;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงข้อมูล...</span>
+  <h2>1. ภาพรวมของระบบ (Overview)</h2>
+  <p>ระบบ <strong>Data Information Jaguar Productions</strong> เป็นศูนย์กลางในการจัดการข้อมูลการผลิต (Data Center) ถูกออกแบบมาเพื่อรวบรวมฟอร์มการบันทึกข้อมูลและรายงานต่างๆ ของสายการผลิตเข้าไว้ด้วยกัน ทำให้ง่ายต่อการติดตาม ตรวจสอบ และวิเคราะห์ข้อมูลประจำวัน</p>
+
+  <h2>2. วิธีการใช้งานฟอร์มหลัก</h2>
+  <ol>
+    <li><strong>การเลือกเมนู:</strong> ในหน้าแรก (Home) จะมีปุ่ม/เมนูสำหรับเข้าถึงฟอร์มต่างๆ เช่น ฟอร์มบันทึกยอดผลิต, กระดาน WIP, หรือรายงานสรุปผล ให้คลิกเลือกส่วนที่ต้องการทำงาน</li>
+    <li><strong>การกรอกข้อมูล:</strong> ตรวจสอบความถูกต้องของข้อมูล (เช่น วันที่, เลขที่ใบสั่งงาน, รหัสสินค้า, จำนวนชิ้น) ก่อนกดยืนยันทุกครั้ง</li>
+    <li><strong>การบันทึก (Submit):</strong> เมื่อกรอกข้อมูลครบถ้วน ให้กดปุ่ม <b>บันทึกข้อมูล</b> ระบบจะส่งข้อมูลขึ้นฐานข้อมูลกลาง (Cloud Database) ทันที</li>
+  </ol>
+
+  <h2>3. โครงสร้างขั้นตอนการทำงานที่รองรับ</h2>
+  <p>ระบบถูกตั้งค่าให้รองรับและจัดกลุ่มขั้นตอนการทำงานหลักของโรงงาน ดังนี้:</p>
+  <ul>
+    <li><strong>ตัดเหรียญ:</strong> ตัดเหรียญมือ, ตัดเหรียญออโต</li>
+    <li><strong>ตัดมุม:</strong> งานตัดมุมทั้งหมด</li>
+    <li><strong>รีดใบ:</strong> รีดใบมือ, รีดใบออโต</li>
+    <li><strong>ตัดใบ:</strong> ตัดใบมือ, ตัดใบฟีดเดอร์</li>
+    <li><strong>เจาะซี่:</strong> เจาะซี่, เจาะซี่ฟีดเดอร์</li>
+    <li><strong>ตีตรา:</strong> ตีตรา, ตีตราฟีดเดอร์</li>
+    <li><strong>ตีลาย:</strong> ตีลาย, ตีลายมือ, ตีลาย_Robot</li>
+    <li><strong>ขึ้นรูป:</strong> งานขึ้นรูปทรง</li>
+  </ul>
+
+  <div class="note-box">
+    <strong><i class="fa-solid fa-lightbulb" style="color: #FCD34D;"></i> ข้อแนะนำเพิ่มเติม:</strong> <br>
+    เพื่อให้รายงานและการคำนวณยอดค้าง (Backlog) มีความแม่นยำที่สุด ผู้ปฏิบัติงานควรบันทึกข้อมูลการผลิตแบบ วันต่อวัน (Daily Update)
   </div>
 
-  <div class="card">
-    <h2 class="card-title"><i class="fa-solid fa-table"></i> ตารางสรุปยอดผลิตรายวัน (เลื่อนซ้าย-ขวาเพื่อดูวันที่)</h2>
-    <div class="table-wrapper">
-      <table id="summaryTable">
-        <thead>
-          <!-- หัวตารางจะถูกสร้างผ่าน JavaScript -->
-        </thead>
-        <tbody id="tableBody">
-          <tr><td class="text-center" style="padding:30px; color:var(--text-muted)">กรุณากดปุ่ม "ประมวลผลรายงาน"</td></tr>
-        </tbody>
-        <tfoot id="tableFoot" style="font-weight:bold; color:var(--text-main); background-color:#0f131c; display:none;">
-          <!-- ท้ายตารางรวมยอดจะถูกสร้างผ่าน JavaScript -->
-        </tfoot>
-      </table>
-    </div>
-  </div>
+  <h2>4. การแจ้งปัญหาการใช้งาน (Support)</h2>
+  <p>หากพบข้อผิดพลาดของระบบ หน้าเว็บไม่โหลด หรือข้อมูลไม่ตรงกับความเป็นจริง กรุณาติดต่อทีม Admin หรือผู้ดูแลระบบ เพื่อดำเนินการแก้ไขฐานข้อมูลโดยเร็วที่สุด</p>
+
+  <br>
+  <hr style="border:0; border-top: 1px dashed var(--border-dark); margin: 30px 0;">
+  <p style="text-align: center; color: var(--text-muted); font-size: 13px;">Copyright &copy; 2026 Jaguar Productions. All rights reserved.</p>
+
 </div>
-
-<script>
-  const SUPABASE_URL = "https://siiiifesdjuunwmwozfb.supabase.co/rest/v1";
-  const SUPABASE_KEY = "sb_publishable_ohToE8Z_Fzo87uBtzdPDIg_cqHCi3HT";
-  const headers = { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" };
-
-  const customStepOrder = ["ตัดเหรียญมือ", "ตัดเหรียญออโต", "ตัดมุม", "รีดใบ", "ตัดใบ", "เจาะซี่", "ตีตรา", "ตีลาย", "ขึ้นรูป"];
-
-  window.onload = function() {
-    let today = new Date();
-    let firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-    
-    document.getElementById('dateTo').value = today.toISOString().split('T')[0];
-    let tzOffset = (new Date()).getTimezoneOffset() * 60000;
-    let localFirstDay = (new Date(firstDay - tzOffset)).toISOString().split('T')[0];
-    document.getElementById('dateFrom').value = localFirstDay;
-    
-    fetchAndRenderReport();
-  };
-
-  // ฟังก์ชันสำหรับรวบชื่อขั้นตอนการทำงานตามเงื่อนไข (อัปเดตใหม่)
-  function getMergedStepName(rawName) {
-    const name = rawName.trim();
-    if (name === "เจาะซี่" || name === "เจาะซี่ฟีดเดอร์") return "เจาะซี่";
-    if (name === "รีดใบมือ" || name === "รีดใบออโต") return "รีดใบ";
-    if (name === "ตัดใบมือ" || name === "ตัดใบฟีดเดอร์") return "ตัดใบ";
-    if (name === "ตีตรา" || name === "ตีตราฟีดเดอร์") return "ตีตรา";
-    // จับกลุ่มตีลาย, ตีลายมือ, ตีลาย_Robot ให้อยู่กลุ่มเดียวกัน
-    if (name === "ตีลาย" || name === "ตีลายมือ" || name.toLowerCase() === "ตีลาย_robot") return "ตีลาย";
-    return name; // ถ้าไม่ตรงเงื่อนไขเลย ให้คืนค่าชื่อเดิมกลับไป
-  }
-
-  async function fetchAndRenderReport() {
-    document.getElementById('loadingMsg').style.display = 'inline-block';
-    const dateFrom = document.getElementById('dateFrom').value;
-    const dateTo = document.getElementById('dateTo').value;
-
-    try {
-      const [prodRes, targetsRes, stepsRes] = await Promise.all([
-        fetch(`${SUPABASE_URL}/daily_production?select=id_target,produced_amount,record_date&record_date=gte.${dateFrom}&record_date=lte.${dateTo}`, { headers }), 
-        fetch(`${SUPABASE_URL}/targets?select=id_target,id_step`, { headers }),
-        fetch(`${SUPABASE_URL}/production_steps?select=id_step,step_name`, { headers })
-      ]);
-
-      if (!prodRes.ok) throw new Error("โหลดข้อมูลล้มเหลว");
-
-      const productions = await prodRes.json();
-      const targets = await targetsRes.json();
-      const steps = await stepsRes.json();
-
-      let targetToStepName = {};
-      targets.forEach(t => {
-        let step = steps.find(s => String(s.id_step) === String(t.id_step));
-        targetToStepName[t.id_target] = step ? step.step_name : "อื่นๆ";
-      });
-
-      let summaryByStep = {}; 
-      let uniqueDates = new Set(); 
-
-      productions.forEach(prod => {
-        // นำชื่อขั้นตอนที่ดึงมา ไปผ่านฟังก์ชันรวบชื่อก่อน
-        let rawStepName = targetToStepName[prod.id_target] || "ไม่มีระบุขั้นตอน";
-        let stepName = getMergedStepName(rawStepName);
-        
-        let amount = parseInt(prod.produced_amount) || 0;
-        if (amount === 0) return;
-
-        let dateStr = prod.record_date;
-        uniqueDates.add(dateStr);
-        
-        if (!summaryByStep[stepName]) summaryByStep[stepName] = { total: 0, daily: {} };
-        summaryByStep[stepName].total += amount;
-        if (!summaryByStep[stepName].daily[dateStr]) summaryByStep[stepName].daily[dateStr] = 0;
-        summaryByStep[stepName].daily[dateStr] += amount;
-      });
-
-      let sortedDates = Array.from(uniqueDates).sort();
-      renderMatrixTable(summaryByStep, sortedDates);
-
-    } catch (error) {
-      alert("Error: " + error.message);
-    } finally {
-      document.getElementById('loadingMsg').style.display = 'none';
-    }
-  }
-
-  function renderMatrixTable(summaryData, sortedDates) {
-    const thead = document.querySelector('#summaryTable thead');
-    const tbody = document.getElementById('tableBody');
-    const tfoot = document.getElementById('tableFoot');
-    
-    if (sortedDates.length === 0 || Object.keys(summaryData).length === 0) {
-      thead.innerHTML = '';
-      tbody.innerHTML = '<tr><td class="text-center" style="padding:30px; color:var(--accent-pink)">ไม่พบยอดการผลิตในช่วงวันที่ระบุ</td></tr>';
-      tfoot.style.display = 'none';
-      return;
-    }
-
-    // 1. หัวตาราง
-    let theadHtml = `
-      <tr>
-        <th class="text-center sticky-col-1" width="45px">ลำดับ</th>
-        <th class="sticky-col-2" style="min-width: 150px;">ขั้นตอนการทำงาน</th>
-    `;
-    sortedDates.forEach(d => {
-      let dateObj = new Date(d);
-      let shortDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
-      theadHtml += `<th class="text-right" title="${d}">${shortDate}</th>`;
-    });
-    theadHtml += `<th class="text-right" style="color:var(--accent-purple); min-width: 100px;">ยอดรวม (ชิ้น)</th></tr>`;
-    thead.innerHTML = theadHtml;
-
-    // 2. ตัวตาราง
-    let rows = Object.keys(summaryData).map(stepName => {
-      return { step: stepName, total: summaryData[stepName].total, daily: summaryData[stepName].daily };
-    });
-    rows.sort((a, b) => {
-      let iA = customStepOrder.indexOf(a.step.trim());
-      let iB = customStepOrder.indexOf(b.step.trim());
-      if (iA !== -1 && iB !== -1) return iA - iB;
-      if (iA !== -1) return -1;
-      if (iB !== -1) return 1;
-      return a.step.localeCompare(b.step, 'th');
-    });
-
-    let tbodyHtml = '';
-    let dailyGrandTotals = {}; 
-    sortedDates.forEach(d => dailyGrandTotals[d] = 0);
-    let overallGrandTotal = 0;
-
-    rows.forEach((row, index) => {
-      overallGrandTotal += row.total;
-      
-      tbodyHtml += `
-        <tr>
-          <td class="text-center sticky-col-1">${index + 1}</td>
-          <td class="sticky-col-2" style="color:var(--accent-blue); font-weight:bold;">${row.step}</td>
-      `;
-
-      sortedDates.forEach(d => {
-        let val = row.daily[d] || 0;
-        dailyGrandTotals[d] += val;
-        
-        if (val > 0) {
-          tbodyHtml += `<td class="text-right" style="color:var(--accent-cyan);">${val.toLocaleString()}</td>`;
-        } else {
-          tbodyHtml += `<td class="text-right" style="color:var(--text-muted);">-</td>`;
-        }
-      });
-
-      tbodyHtml += `<td class="text-right" style="color:#fff; font-weight:bold; font-size: 15px;">${row.total.toLocaleString()}</td></tr>`;
-    });
-    tbody.innerHTML = tbodyHtml;
-
-    // 3. ท้ายตาราง
-    let tfootHtml = `
-      <tr>
-        <td class="text-right sticky-col-1" style="background-color:#0f131c;"></td>
-        <td class="text-right sticky-col-2" style="background-color:#0f131c; padding-right:15px;">รวมยอดผลิต:</td>
-    `;
-    sortedDates.forEach(d => {
-      let dailyTotal = dailyGrandTotals[d];
-      tfootHtml += `<td class="text-right" style="color:#fff;">${dailyTotal > 0 ? dailyTotal.toLocaleString() : '-'}</td>`;
-    });
-    tfootHtml += `<td class="text-right" style="color:var(--accent-purple); font-size:16px;">${overallGrandTotal.toLocaleString()}</td></tr>`;
-    
-    tfoot.innerHTML = tfootHtml;
-    tfoot.style.display = 'table-row-group';
-  }
-</script>
 
 </body>
 </html>
