@@ -146,7 +146,7 @@
   <div class="app-header">
     <div>
       <h1 class="app-title"><i class="fa-solid fa-chart-column"></i> PRODUCTION PERFORMANCE REPORT</h1>
-      <div class="app-subtitle">รายงานสรุปยอดการผลิตแยกตามขั้นตอน รายวัน (ตารางแบบกางวันที่)</div>
+      <div class="app-subtitle">รายงานสรุปยอดการผลิตแยกตามขั้นตอน รายวัน (ตารางแบบกางวันที่เรียงตาม Level)</div>
     </div>
     
     <!-- ปุ่มควบคุมมุมขวาบน -->
@@ -248,8 +248,6 @@
   const SUPABASE_KEY = "sb_publishable_ohToE8Z_Fzo87uBtzdPDIg_cqHCi3HT";
   const headers = { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" };
 
-  const customStepOrder = ["ตัดเหรียญมือ", "ตัดเหรียญออโต", "ตัดมุม", "รีดใบ", "ตัดใบ", "เจาะซี่", "ตีตรา", "ตีลาย", "ขึ้นรูป"];
-
   // ================= ส่วนควบคุมหน้าต่างคู่มือ =================
   function openManual() { document.getElementById('manualModal').style.display = 'flex'; }
   function closeManual() { document.getElementById('manualModal').style.display = 'none'; }
@@ -278,7 +276,7 @@
     fetchAndRenderReport();
   };
 
-  // รวมชื่อขั้นตอนการทำงาน
+  // รวมชื่อขั้นตอนการทำงานให้เป็นหมวดหมู่หลัก
   function getMergedStepName(rawName) {
     const name = rawName.trim();
     if (name === "เจาะซี่" || name === "เจาะซี่ฟีดเดอร์") return "เจาะซี่";
@@ -298,7 +296,7 @@
       const [prodRes, targetsRes, stepsRes] = await Promise.all([
         fetch(`${SUPABASE_URL}/daily_production?select=id_target,produced_amount,record_date&record_date=gte.${dateFrom}&record_date=lte.${dateTo}`, { headers }), 
         fetch(`${SUPABASE_URL}/targets?select=id_target,id_step`, { headers }),
-        fetch(`${SUPABASE_URL}/production_steps?select=id_step,step_name`, { headers })
+        fetch(`${SUPABASE_URL}/production_steps?select=id_step,step_name,level`, { headers }) // เพิ่มการเรียก level
       ]);
 
       if (!prodRes.ok) throw new Error("โหลดข้อมูลล้มเหลว");
@@ -311,6 +309,17 @@
       targets.forEach(t => {
         let step = steps.find(s => String(s.id_step) === String(t.id_step));
         targetToStepName[t.id_target] = step ? step.step_name : "อื่นๆ";
+      });
+
+      // ดึงค่า level มาผูกกับกลุ่มชื่อขั้นตอน
+      let stepLevelMap = {};
+      steps.forEach(s => {
+        let mergedName = getMergedStepName(s.step_name);
+        let lvl = s.level !== null && s.level !== undefined ? parseInt(s.level) : 999;
+        // กรณีมีการยุบรวมชื่อ จะอิง level ที่ต่ำที่สุดในกลุ่มนั้นเป็นหลัก
+        if (stepLevelMap[mergedName] === undefined || lvl < stepLevelMap[mergedName]) {
+          stepLevelMap[mergedName] = lvl;
+        }
       });
 
       let summaryByStep = {}; 
@@ -333,7 +342,7 @@
       });
 
       let sortedDates = Array.from(uniqueDates).sort();
-      renderMatrixTable(summaryByStep, sortedDates);
+      renderMatrixTable(summaryByStep, sortedDates, stepLevelMap);
 
     } catch (error) {
       alert("Error: " + error.message);
@@ -342,7 +351,7 @@
     }
   }
 
-  function renderMatrixTable(summaryData, sortedDates) {
+  function renderMatrixTable(summaryData, sortedDates, stepLevelMap) {
     const thead = document.querySelector('#summaryTable thead');
     const tbody = document.getElementById('tableBody');
     const tfoot = document.getElementById('tableFoot');
@@ -370,12 +379,15 @@
     let rows = Object.keys(summaryData).map(stepName => {
       return { step: stepName, total: summaryData[stepName].total, daily: summaryData[stepName].daily };
     });
+
+    // เรียงลำดับแถวตาม level จากฐานข้อมูล (น้อยไปมาก)
     rows.sort((a, b) => {
-      let iA = customStepOrder.indexOf(a.step.trim());
-      let iB = customStepOrder.indexOf(b.step.trim());
-      if (iA !== -1 && iB !== -1) return iA - iB;
-      if (iA !== -1) return -1;
-      if (iB !== -1) return 1;
+      let levelA = stepLevelMap[a.step] !== undefined ? stepLevelMap[a.step] : 999;
+      let levelB = stepLevelMap[b.step] !== undefined ? stepLevelMap[b.step] : 999;
+      
+      if (levelA !== levelB) {
+        return levelA - levelB; 
+      }
       return a.step.localeCompare(b.step, 'th');
     });
 
