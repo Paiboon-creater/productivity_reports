@@ -92,23 +92,26 @@
     tr:hover .sticky-col-1, tr:hover .sticky-col-2 { background-color: var(--row-hover); }
     .text-right { text-align: right; }
     .text-center { text-align: center; }
+    
+    .drilldown-link { color: var(--accent-cyan); cursor: pointer; border-bottom: 1px dashed var(--accent-cyan); transition: 0.2s; }
+    .drilldown-link:hover { color: #fff; border-bottom-color: #fff; }
 
-    /* MODAL MANUAL STYLES (กล่องคู่มือ) */
+    /* MODAL STYLES */
     .modal-overlay {
       display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center;
-      padding: 20px; box-sizing: border-box;
+      padding: 20px; box-sizing: border-box; backdrop-filter: blur(4px);
     }
     .modal-content {
       background: var(--panel-bg); color: var(--text-main); width: 100%; max-width: 850px; max-height: 90vh;
-      border-radius: 10px; overflow-y: auto; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      border-radius: 10px; overflow-y: auto; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8);
       position: relative; border: 1px solid var(--border-dark); font-family: 'Sarabun', sans-serif;
     }
     .modal-close {
       position: absolute; top: 20px; right: 20px; background: transparent; border: none;
       font-size: 28px; cursor: pointer; color: var(--text-muted);
     }
-    .modal-close:hover { color: #fff; }
+    .modal-close:hover { color: #fff; transform: scale(1.1); }
     
     .manual-body h2 { color: var(--accent-purple); border-bottom: 1px dashed var(--border-dark); padding-bottom: 5px; margin-top: 30px; }
     .manual-body p, .manual-body li { font-size: 15px; color: #CBD5E1; line-height: 1.6; }
@@ -129,7 +132,6 @@
       tr, tr:hover { background-color: transparent !important; }
       .app-title, .card-title { color: #000; }
       
-      /* กฎสำหรับการสั่งปริ้นต์หน้าคู่มือ */
       body.printing-modal .container { display: none !important; }
       body.printing-modal .modal-overlay { display: block !important; position: static; background: transparent; padding: 0; }
       body.printing-modal .modal-content { box-shadow: none; border: none; max-width: 100%; padding: 0; color: #000; background: #fff;}
@@ -151,15 +153,12 @@
     
     <!-- ปุ่มควบคุมมุมขวาบน -->
     <div class="no-print" style="display:flex; gap:10px;">
-      <!-- ปุ่ม HOME กลับหน้าฟอร์มหลัก -->
       <a href="https://paiboon-creater.github.io/Data_Information_Jaguar_productions/" class="btn btn-home" title="กลับหน้าแรก">
         <i class="fa-solid fa-house"></i> HOME
       </a>
-      <!-- ปุ่ม MANUAL สั่งเปิดหน้าต่างคู่มือ -->
       <button class="btn btn-manual" onclick="openManual()" title="ดูคู่มือการใช้งาน">
         <i class="fa-solid fa-book"></i> MANUAL
       </button>
-      <!-- ปุ่ม PRINT สั่งพิมพ์ตารางรายงาน -->
       <button class="btn btn-print" onclick="window.print()" title="พิมพ์รายงาน">
         <i class="fa-solid fa-print"></i> PRINT
       </button>
@@ -194,12 +193,40 @@
   </div>
 </div>
 
+<!-- ================= หน้าต่างแสดงรายละเอียด Drill-Down ================= -->
+<div class="modal-overlay no-print" id="detailModal">
+  <div class="modal-content" style="max-width: 600px;">
+    <button class="modal-close" onclick="closeDetailModal()" title="ปิด">&times;</button>
+    <div class="manual-body">
+      <h2 style="margin:0; border-bottom: 2px solid var(--border-dark); padding-bottom: 10px; color:var(--accent-cyan); margin-top: 0;">
+        <i class="fa-solid fa-list-check"></i> รายละเอียดการผลิต
+      </h2>
+      <p id="detailSubtitle" style="color: var(--text-muted); margin-bottom: 20px; font-size: 16px;"></p>
+      
+      <div style="overflow-x: auto; border: 1px solid var(--border-dark); border-radius: 6px;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th style="background-color: #0f131c; padding: 10px 15px; text-align: center; border-bottom: 2px solid var(--border-dark); width: 60px;">ลำดับ</th>
+              <th style="background-color: #0f131c; padding: 10px 15px; text-align: left; border-bottom: 2px solid var(--border-dark);">เลขที่ใบสั่ง</th>
+              <th style="background-color: #0f131c; padding: 10px 15px; text-align: left; border-bottom: 2px solid var(--border-dark);">รหัสสินค้า</th>
+              <th style="background-color: #0f131c; padding: 10px 15px; text-align: right; border-bottom: 2px solid var(--border-dark);">จำนวน (ชิ้น)</th>
+            </tr>
+          </thead>
+          <tbody id="detailTableBody">
+            <!-- ข้อมูลย่อยจะถูกแทรกที่นี่ -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- ================= หน้าต่างคู่มือการใช้งาน (Modal Popup) ================= -->
 <div class="modal-overlay no-print" id="manualModal">
   <div class="modal-content">
     <button class="modal-close" onclick="closeManual()" title="ปิดหน้าต่างคู่มือ">&times;</button>
     <div class="manual-body">
-      
       <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--border-dark); padding-bottom: 15px; margin-bottom: 20px;">
         <h2 style="margin:0; border:none; padding:0; color:var(--accent-blue);"><i class="fa-solid fa-book-open"></i> คู่มือการใช้งานระบบ JAGUAR PRODUCTIONS</h2>
         <button class="btn btn-print no-print" onclick="printManual()"><i class="fa-solid fa-print"></i> พิมพ์คู่มือ</button>
@@ -214,7 +241,7 @@
       <ol>
         <li><strong>การเลือกเมนู:</strong> ในหน้าแรก (Home) จะมีปุ่ม/เมนูสำหรับเข้าถึงฟอร์มต่างๆ เช่น ฟอร์มบันทึกยอดผลิต, กระดาน WIP, หรือรายงานสรุปผล ให้คลิกเลือกส่วนที่ต้องการทำงาน</li>
         <li><strong>การกรอกข้อมูล:</strong> ตรวจสอบความถูกต้องของข้อมูล (เช่น วันที่, เลขที่ใบสั่งงาน, รหัสสินค้า, จำนวนชิ้น) ก่อนกดยืนยันทุกครั้ง</li>
-        <li><strong>การบันทึก (Submit):</strong> เมื่อกรอกข้อมูลครบถ้วน ให้กดปุ่ม <b>บันทึกข้อมูล</b> ระบบจะส่งข้อมูลขึ้นฐานข้อมูลกลาง (Cloud Database) ทันที</li>
+        <li><strong>การดูรายละเอียดเชิงลึก:</strong> ในรายงานสรุปยอดผลิต ตัวเลขในตารางสามารถคลิกเพื่อดูรายละเอียดรายการใบสั่งและรหัสสินค้าที่ซ่อนอยู่เบื้องหลังได้</li>
       </ol>
 
       <h2>3. โครงสร้างขั้นตอนการทำงานที่รองรับ</h2>
@@ -234,10 +261,6 @@
         <strong><i class="fa-solid fa-lightbulb" style="color: #FCD34D;"></i> ข้อแนะนำเพิ่มเติม:</strong> <br>
         เพื่อให้รายงานและการคำนวณยอดค้าง (Backlog) มีความแม่นยำที่สุด ผู้ปฏิบัติงานควรบันทึกข้อมูลการผลิตแบบ วันต่อวัน (Daily Update)
       </div>
-
-      <h2>4. การแจ้งปัญหาการใช้งาน (Support)</h2>
-      <p>หากพบข้อผิดพลาดของระบบ หน้าเว็บไม่โหลด หรือข้อมูลไม่ตรงกับความเป็นจริง กรุณาติดต่อทีม Admin หรือผู้ดูแลระบบ เพื่อดำเนินการแก้ไขฐานข้อมูลโดยเร็วที่สุด</p>
-      
     </div>
   </div>
 </div>
@@ -248,13 +271,59 @@
   const SUPABASE_KEY = "sb_publishable_ohToE8Z_Fzo87uBtzdPDIg_cqHCi3HT";
   const headers = { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" };
 
-  // ================= ส่วนควบคุมหน้าต่างคู่มือ =================
+  // ตัวแปรเก็บข้อมูลรายละเอียดย่อย
+  window.reportDetails = {};
+
+  // ================= ส่วนควบคุมหน้าต่างคู่มือและรายละเอียด =================
   function openManual() { document.getElementById('manualModal').style.display = 'flex'; }
   function closeManual() { document.getElementById('manualModal').style.display = 'none'; }
   
+  function openDetailModal(step, dateStr, displayDate) {
+    const key = step + '_' + dateStr;
+    const details = window.reportDetails[key] || [];
+    
+    document.getElementById('detailSubtitle').innerHTML = `<b>ขั้นตอน:</b> <span style="color:#fff;">${step}</span> &nbsp;|&nbsp; <b>วันที่:</b> <span style="color:#fff;">${displayDate}</span>`;
+    
+    let html = '';
+    let total = 0;
+    
+    if(details.length === 0) {
+        html = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">ไม่มีข้อมูลรายละเอียด</td></tr>`;
+    } else {
+        // เรียงตามเลขที่ใบสั่ง
+        details.sort((a, b) => a.orderNo.localeCompare(b.orderNo));
+        
+        details.forEach((item, index) => {
+            total += item.amount;
+            html += `
+              <tr style="border-bottom: 1px solid var(--border-dark);">
+                <td style="padding: 10px 15px; text-align: center; color:var(--text-muted);">${index + 1}</td>
+                <td style="padding: 10px 15px; color:var(--accent-blue);">${item.orderNo}</td>
+                <td style="padding: 10px 15px; color:var(--accent-cyan);">${item.workCode}</td>
+                <td style="padding: 10px 15px; text-align: right; color:#fff; font-weight:bold;">${item.amount.toLocaleString()}</td>
+              </tr>
+            `;
+        });
+        
+        html += `
+          <tr style="background-color: #1a2233;">
+            <td colspan="3" style="padding: 10px 15px; text-align: right; font-weight:bold; color:var(--text-muted);">รวมทั้งหมด:</td>
+            <td style="padding: 10px 15px; text-align: right; font-weight:bold; color:var(--accent-purple); font-size:16px;">${total.toLocaleString()}</td>
+          </tr>
+        `;
+    }
+    
+    document.getElementById('detailTableBody').innerHTML = html;
+    document.getElementById('detailModal').style.display = 'flex';
+  }
+  
+  function closeDetailModal() { document.getElementById('detailModal').style.display = 'none'; }
+
   window.onclick = function(event) {
-    let modal = document.getElementById('manualModal');
-    if (event.target == modal) { modal.style.display = "none"; }
+    let manualModal = document.getElementById('manualModal');
+    let detailModal = document.getElementById('detailModal');
+    if (event.target == manualModal) { manualModal.style.display = "none"; }
+    if (event.target == detailModal) { detailModal.style.display = "none"; }
   }
   
   function printManual() {
@@ -276,7 +345,6 @@
     fetchAndRenderReport();
   };
 
-  // รวมชื่อขั้นตอนการทำงานให้เป็นหมวดหมู่หลัก
   function getMergedStepName(rawName) {
     const name = rawName.trim();
     if (name === "เจาะซี่" || name === "เจาะซี่ฟีดเดอร์") return "เจาะซี่";
@@ -293,10 +361,13 @@
     const dateTo = document.getElementById('dateTo').value;
 
     try {
-      const [prodRes, targetsRes, stepsRes] = await Promise.all([
-        fetch(`${SUPABASE_URL}/daily_production?select=id_target,produced_amount,record_date&record_date=gte.${dateFrom}&record_date=lte.${dateTo}`, { headers }), 
+      // ดึงข้อมูลทั้งหมดที่จำเป็น
+      const [prodRes, targetsRes, stepsRes, ordersRes, workRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/daily_production?select=id_target,produced_amount,record_date,id_order&record_date=gte.${dateFrom}&record_date=lte.${dateTo}`, { headers }), 
         fetch(`${SUPABASE_URL}/targets?select=id_target,id_step`, { headers }),
-        fetch(`${SUPABASE_URL}/production_steps?select=id_step,step_name,level`, { headers }) // เพิ่มการเรียก level
+        fetch(`${SUPABASE_URL}/production_steps?select=id_step,step_name,level`, { headers }),
+        fetch(`${SUPABASE_URL}/orders?select=id_order,order_no,id_work`, { headers }),
+        fetch(`${SUPABASE_URL}/work_items?select=id_work,work_code`, { headers })
       ]);
 
       if (!prodRes.ok) throw new Error("โหลดข้อมูลล้มเหลว");
@@ -304,19 +375,26 @@
       const productions = await prodRes.json();
       const targets = await targetsRes.json();
       const steps = await stepsRes.json();
+      const orders = await ordersRes.json();
+      const workItems = await workRes.json();
 
+      // สร้าง Map เพื่อการค้นหาที่รวดเร็ว
       let targetToStepName = {};
       targets.forEach(t => {
         let step = steps.find(s => String(s.id_step) === String(t.id_step));
         targetToStepName[t.id_target] = step ? step.step_name : "อื่นๆ";
       });
 
-      // ดึงค่า level มาผูกกับกลุ่มชื่อขั้นตอน
+      let orderMap = {};
+      orders.forEach(o => orderMap[o.id_order] = o);
+      
+      let workMap = {};
+      workItems.forEach(w => workMap[w.id_work] = w);
+
       let stepLevelMap = {};
       steps.forEach(s => {
         let mergedName = getMergedStepName(s.step_name);
         let lvl = s.level !== null && s.level !== undefined ? parseInt(s.level) : 999;
-        // กรณีมีการยุบรวมชื่อ จะอิง level ที่ต่ำที่สุดในกลุ่มนั้นเป็นหลัก
         if (stepLevelMap[mergedName] === undefined || lvl < stepLevelMap[mergedName]) {
           stepLevelMap[mergedName] = lvl;
         }
@@ -324,21 +402,42 @@
 
       let summaryByStep = {}; 
       let uniqueDates = new Set(); 
+      window.reportDetails = {}; // เคลียร์ข้อมูลเก่า
 
       productions.forEach(prod => {
         let rawStepName = targetToStepName[prod.id_target] || "ไม่มีระบุขั้นตอน";
         let stepName = getMergedStepName(rawStepName);
-        
         let amount = parseInt(prod.produced_amount) || 0;
+        
         if (amount === 0) return;
 
         let dateStr = prod.record_date;
         uniqueDates.add(dateStr);
         
+        // ผูกข้อมูลใบสั่งและรหัสสินค้า
+        let orderInfo = orderMap[prod.id_order];
+        let orderNo = orderInfo ? orderInfo.order_no : "ไม่มีข้อมูลใบสั่ง";
+        let workCode = "-";
+        if (orderInfo && orderInfo.id_work && workMap[orderInfo.id_work]) {
+            workCode = workMap[orderInfo.id_work].work_code;
+        }
+        
+        // บันทึกยอดรวม
         if (!summaryByStep[stepName]) summaryByStep[stepName] = { total: 0, daily: {} };
         summaryByStep[stepName].total += amount;
         if (!summaryByStep[stepName].daily[dateStr]) summaryByStep[stepName].daily[dateStr] = 0;
         summaryByStep[stepName].daily[dateStr] += amount;
+        
+        // บันทึกข้อมูลย่อยสำหรับ Drill-down
+        let detailKey = stepName + '_' + dateStr;
+        if (!window.reportDetails[detailKey]) window.reportDetails[detailKey] = [];
+        
+        let existingItem = window.reportDetails[detailKey].find(item => item.orderNo === orderNo && item.workCode === workCode);
+        if (existingItem) {
+            existingItem.amount += amount;
+        } else {
+            window.reportDetails[detailKey].push({ orderNo, workCode, amount });
+        }
       });
 
       let sortedDates = Array.from(uniqueDates).sort();
@@ -368,9 +467,11 @@
         <th class="text-center sticky-col-1" width="45px">ลำดับ</th>
         <th class="sticky-col-2" style="min-width: 150px;">ขั้นตอนการทำงาน</th>
     `;
+    let displayDatesMap = {};
     sortedDates.forEach(d => {
       let dateObj = new Date(d);
       let shortDate = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
+      displayDatesMap[d] = shortDate;
       theadHtml += `<th class="text-right" title="${d}">${shortDate}</th>`;
     });
     theadHtml += `<th class="text-right" style="color:var(--accent-purple); min-width: 100px;">ยอดรวม (ชิ้น)</th></tr>`;
@@ -380,7 +481,6 @@
       return { step: stepName, total: summaryData[stepName].total, daily: summaryData[stepName].daily };
     });
 
-    // เรียงลำดับแถวตาม level จากฐานข้อมูล (น้อยไปมาก)
     rows.sort((a, b) => {
       let levelA = stepLevelMap[a.step] !== undefined ? stepLevelMap[a.step] : 999;
       let levelB = stepLevelMap[b.step] !== undefined ? stepLevelMap[b.step] : 999;
@@ -410,7 +510,8 @@
         dailyGrandTotals[d] += val;
         
         if (val > 0) {
-          tbodyHtml += `<td class="text-right" style="color:var(--accent-cyan);">${val.toLocaleString()}</td>`;
+          // เพิ่มลิงก์และอีเวนต์สำหรับเปิด Drill-down
+          tbodyHtml += `<td class="text-right"><span class="drilldown-link" onclick="openDetailModal('${row.step}', '${d}', '${displayDatesMap[d]}')">${val.toLocaleString()}</span></td>`;
         } else {
           tbodyHtml += `<td class="text-right" style="color:var(--text-muted);">-</td>`;
         }
